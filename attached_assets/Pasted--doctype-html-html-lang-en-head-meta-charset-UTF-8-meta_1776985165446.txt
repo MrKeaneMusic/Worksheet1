@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Fill In The Blank</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: sans-serif; background: #f5f3ff; }
+
+    .note-slot {
+      width: 60px;
+      height: 80px;
+      border: 2px dashed #7c3aed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px;
+      cursor: pointer;
+    }
+
+    .note-chip {
+      padding: 10px;
+      background: #7c3aed;
+      color: white;
+      margin: 5px;
+      cursor: grab;
+      border-radius: 8px;
+    }
+
+    .filled { background: #ddd6fe; }
+    .correct { background: #bbf7d0; }
+    .incorrect { background: #fecaca; }
+  </style>
+</head>
+
+<body class="p-6">
+
+<h1 class="text-2xl font-bold mb-4">🎵 Musical Melodies</h1>
+
+<div id="game"></div>
+
+<h2 class="mt-6 font-bold">Note Bank</h2>
+<div id="bank" class="flex flex-wrap"></div>
+
+<button onclick="checkAnswers()" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded">
+  Check Answers
+</button>
+
+<script>
+const MELODIES = [
+  { notes: ["C","?","E"], answer: "D" },
+  { notes: ["G","?","B"], answer: "A" }
+];
+
+const ALL_NOTES = ["C","D","E","F","G","A","B"];
+
+let placed = {};
+let dragged = null;
+
+// Build UI
+function build() {
+  const game = document.getElementById("game");
+  const bank = document.getElementById("bank");
+
+  game.innerHTML = "";
+  bank.innerHTML = "";
+
+  // Create bank
+  ALL_NOTES.forEach(n => {
+    let div = document.createElement("div");
+    div.className = "note-chip";
+    div.textContent = n;
+    div.draggable = true;
+
+    div.ondragstart = () => dragged = n;
+
+    bank.appendChild(div);
+  });
+
+  // Create melodies
+  MELODIES.forEach((melody, i) => {
+    let row = document.createElement("div");
+    row.className = "flex";
+
+    melody.notes.forEach((note, j) => {
+      if (note === "?") {
+        let slot = document.createElement("div");
+        slot.className = "note-slot";
+
+        slot.ondragover = e => e.preventDefault();
+
+        slot.ondrop = () => {
+          slot.textContent = dragged;
+          slot.classList.add("filled");
+          placed[i+"-"+j] = dragged;
+        };
+
+        row.appendChild(slot);
+      } else {
+        let fixed = document.createElement("div");
+        fixed.className = "note-slot";
+        fixed.textContent = note;
+        fixed.style.background = "#ede9fe";
+        row.appendChild(fixed);
+      }
+    });
+
+    game.appendChild(row);
+  });
+}
+
+// Check answers
+function checkAnswers() {
+  let score = 0;
+
+  MELODIES.forEach((melody, i) => {
+    melody.notes.forEach((note, j) => {
+      if (note === "?") {
+        let key = i+"-"+j;
+        let slot = document.querySelectorAll(".note-slot")[i*3 + j];
+
+        if (placed[key] === melody.answer) {
+          slot.classList.add("correct");
+          score++;
+        } else {
+          slot.classList.add("incorrect");
+        }
+      }
+    });
+  });
+
+  alert("Score: " + score + "/" + MELODIES.length);
+}
+
+build();
+</script>
+
+</body>
+</html>
